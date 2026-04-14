@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Student — Library</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/library.css}">
+</head>
+<body class="app-page">
+    <header class="app-header">
+        <div class="app-brand">
+            <span class="logo" aria-hidden="true">📖</span>
+            <div>
+                <h1>Student dashboard</h1>
+                <span>Browse, borrow, return</span>
+            </div>
+        </div>
+        <form method="post" action="/logout">
+            <button type="submit" class="btn btn-ghost">Log out</button>
+        </form>
+    </header>
+
+    <main class="app-main">
+        <div th:if="${message}"
+             role="status"
+             th:class="${#strings.contains(message, 'successfully')} ? 'alert alert--ok' : 'alert alert--error'"
+             th:text="${message}"></div>
+
+        <section class="panel">
+            <h2>Catalog</h2>
+            <p class="panel-hint">Click a row to see the book summary and details.</p>
+            <div class="catalog-layout">
+                <div class="table-wrap">
+                    <table class="data catalog-table">
+                        <thead>
+                        <tr>
+                            <th>Book ID</th>
+                            <th>Title</th>
+                            <th>Author</th>
+                            <th>Available</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:if="${#lists.isEmpty(books)}">
+                            <td colspan="4" class="table-empty">No books in the catalog yet.</td>
+                        </tr>
+                        <tr th:each="book : ${books}"
+                            class="catalog-row"
+                            tabindex="0"
+                            role="button"
+                            th:data-book-id="${book.id}"
+                            th:data-title="${book.title}"
+                            th:data-author="${book.author}"
+                            th:data-isbn="${book.isbn}"
+                            th:data-available="${book.availableQuantity + ' / ' + book.quantity}"
+                            th:data-summary="${book.summary}">
+                            <td class="mono" th:text="${book.id}"></td>
+                            <td th:text="${book.title}"></td>
+                            <td th:text="${book.author}"></td>
+                            <td th:text="${book.availableQuantity + ' / ' + book.quantity}"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <aside id="book-detail-panel" class="book-detail-panel" aria-live="polite">
+                    <h3 id="book-detail-heading" class="book-detail-panel__title">Selected book</h3>
+                    <dl class="book-detail-panel__meta">
+                        <dt>Title</dt>
+                        <dd id="book-detail-title">—</dd>
+                        <dt>Author</dt>
+                        <dd id="book-detail-author">—</dd>
+                        <dt>ISBN</dt>
+                        <dd id="book-detail-isbn">—</dd>
+                        <dt>Available</dt>
+                        <dd id="book-detail-available">—</dd>
+                        <dt>Book ID</dt>
+                        <dd id="book-detail-id" class="mono">—</dd>
+                    </dl>
+                    <div class="book-detail-panel__summary-wrap">
+                        <strong class="book-detail-panel__summary-label">Summary</strong>
+                        <p id="book-detail-summary" class="book-detail-panel__summary">Select a book from the table to see its summary.</p>
+                    </div>
+                    <button type="button" class="btn btn-ghost btn--small" id="book-detail-use-id" disabled>Copy ID to borrow field</button>
+                </aside>
+            </div>
+        </section>
+
+        <section class="panel">
+            <h2>Borrow &amp; return</h2>
+            <form method="post" action="/student/issue" class="form-inline">
+                <div class="form-group">
+                    <label for="issueId">Borrow — book ID</label>
+                    <input id="issueId" type="text" name="bookId" required placeholder="Paste book UUID">
+                </div>
+                <button type="submit" class="btn btn-primary">Issue</button>
+            </form>
+            <form method="post" action="/student/return" class="form-inline">
+                <div class="form-group">
+                    <label for="returnId">Return — book ID</label>
+                    <input id="returnId" type="text" name="bookId" required placeholder="Same ID you borrowed">
+                </div>
+                <button type="submit" class="btn btn-success">Return</button>
+            </form>
+        </section>
+
+        <section class="panel">
+            <h2>Your issue history</h2>
+            <div class="table-wrap">
+                <table class="data">
+                    <thead>
+                    <tr>
+                        <th>Issue ID</th>
+                        <th>Book ID</th>
+                        <th>Status</th>
+                        <th>Issued</th>
+                        <th>Due</th>
+                        <th>Returned</th>
+                        <th>Fine</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="issue : ${issues}">
+                        <td class="mono" th:text="${issue.id}"></td>
+                        <td class="mono" th:text="${issue.bookId}"></td>
+                        <td>
+                            <span th:if="${issue.status == 'ISSUED'}" class="badge badge--issued" th:text="${issue.status}"></span>
+                            <span th:if="${issue.status == 'RETURNED'}" class="badge badge--returned" th:text="${issue.status}"></span>
+                        </td>
+                        <td th:text="${issue.issueDate}"></td>
+                        <td th:text="${issue.dueDate}"></td>
+                        <td th:text="${issue.returnDate}"></td>
+                        <td th:text="${issue.fineAmount}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <th:block th:replace="~{fragments/chat-widget :: chat}"></th:block>
+    <script th:src="@{/js/student-catalog.js}" defer></script>
+</body>
+</html>

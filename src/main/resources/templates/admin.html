@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Admin — Library</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/library.css}">
+</head>
+<body class="app-page">
+    <header class="app-header">
+        <div class="app-brand">
+            <span class="logo" aria-hidden="true">📚</span>
+            <div>
+                <h1>Admin dashboard</h1>
+                <span>Catalog &amp; inventory</span>
+            </div>
+        </div>
+        <form method="post" action="/logout">
+            <button type="submit" class="btn btn-ghost">Log out</button>
+        </form>
+    </header>
+
+    <main class="app-main">
+        <div th:if="${adminMessage}"
+             class="alert"
+             th:classappend="${#strings.contains(adminMessage, 'updated') or #strings.contains(adminMessage, 'removed.')} ? ' alert--ok' : ' alert--error'"
+             role="status"
+             th:text="${adminMessage}"></div>
+        <div th:if="${staffMessage}"
+             class="alert"
+             th:classappend="${#strings.contains(staffMessage, 'suspended.') or #strings.contains(staffMessage, 'reinstated.')} ? ' alert--ok' : ' alert--error'"
+             role="status"
+             th:text="${staffMessage}"></div>
+
+        <section class="panel">
+            <h2>Add a book</h2>
+            <form method="post" action="/admin/add-book">
+                <div class="form-row cols-2">
+                    <div class="form-group">
+                        <label for="title">Title</label>
+                        <input id="title" type="text" name="title" required placeholder="The Pragmatic Programmer">
+                    </div>
+                    <div class="form-group">
+                        <label for="author">Author</label>
+                        <input id="author" type="text" name="author" required placeholder="David Thomas">
+                    </div>
+                    <div class="form-group">
+                        <label for="isbn">ISBN</label>
+                        <input id="isbn" type="text" name="isbn" required placeholder="978-…">
+                    </div>
+                    <div class="form-group">
+                        <label for="quantity">Quantity</label>
+                        <input id="quantity" type="number" name="quantity" min="1" required placeholder="5">
+                    </div>
+                    <div class="form-group form-group--full">
+                        <label for="summary">Summary <span class="panel-hint">(optional — shown to students when they select this book)</span></label>
+                        <textarea id="summary" name="summary" rows="3" placeholder="What the book is about…"></textarea>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-primary--inline">Add to catalog</button>
+            </form>
+        </section>
+
+        <section class="panel">
+            <h2>Registered users</h2>
+            <p class="panel-hint">Overview of accounts (passwords are never shown).</p>
+            <div class="table-wrap">
+                <table class="data">
+                    <thead>
+                    <tr>
+                        <th>User ID</th>
+                        <th>Full name</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Staff assignment</th>
+                        <th>Account</th>
+                        <th>Remove</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${#lists.isEmpty(users)}">
+                        <td colspan="8" class="table-empty">No users registered yet.</td>
+                    </tr>
+                    <tr th:each="u : ${users}"
+                        th:with="canToggle=${u.id != actorId and ((actorRole == 'ADMIN' and (u.role == 'STUDENT' or u.role == 'EMPLOYEE')) or (actorRole == 'EMPLOYEE' and u.role == 'STUDENT'))},
+                               canRemove=${actorRole == 'ADMIN' and u.id != actorId and u.role != 'ADMIN'}">
+                        <td class="mono" th:text="${u.id}"></td>
+                        <td th:text="${u.name}"></td>
+                        <td th:text="${u.username}"></td>
+                        <td th:text="${u.email != null and !#strings.isEmpty(u.email) ? u.email : '—'}"></td>
+                        <td>
+                            <span th:if="${u.role == 'ADMIN'}" class="badge badge--admin-role" th:text="${u.role}"></span>
+                            <span th:if="${u.role == 'STUDENT'}" class="badge badge--student-role" th:text="${u.role}"></span>
+                            <span th:if="${u.role == 'EMPLOYEE'}" class="badge badge--employee-role" th:text="${u.role}"></span>
+                            <span th:if="${u.role != 'ADMIN' and u.role != 'STUDENT' and u.role != 'EMPLOYEE'}" class="badge" th:text="${u.role}"></span>
+                        </td>
+                        <td>
+                            <span th:if="${u.role == 'ADMIN'}" class="panel-hint" style="margin:0">—</span>
+                            <form th:if="${u.role != 'ADMIN'}" method="post" action="/admin/user-role" class="form-inline" style="gap:0.5rem">
+                                <input type="hidden" name="userId" th:value="${u.id}">
+                                <button th:if="${u.role == 'STUDENT'}" type="submit" name="newRole" value="EMPLOYEE" class="btn btn-ghost">Make employee</button>
+                                <button th:if="${u.role == 'EMPLOYEE'}" type="submit" name="newRole" value="STUDENT" class="btn btn-ghost">Make student</button>
+                            </form>
+                        </td>
+                        <td>
+                            <span th:if="${u.banned}" class="badge badge--banned">Suspended</span>
+                            <span th:if="${!u.banned and canToggle}" class="panel-hint account-line">Active</span>
+                            <form th:if="${canToggle and !u.banned}" method="post" action="/staff/set-ban" class="form-inline ban-actions">
+                                <input type="hidden" name="userId" th:value="${u.id}">
+                                <input type="hidden" name="blocked" value="true">
+                                <button type="submit" class="btn btn-ghost">Suspend</button>
+                            </form>
+                            <form th:if="${canToggle and u.banned}" method="post" action="/staff/set-ban" class="form-inline ban-actions">
+                                <input type="hidden" name="userId" th:value="${u.id}">
+                                <input type="hidden" name="blocked" value="false">
+                                <button type="submit" class="btn btn-ghost">Reinstate</button>
+                            </form>
+                            <span th:if="${!canToggle and !u.banned}" class="panel-hint account-line">—</span>
+                        </td>
+                        <td>
+                            <form th:if="${canRemove}" method="post" action="/admin/remove-user" class="form-inline ban-actions"
+                                  onsubmit="return confirm('Permanently remove this user? This cannot be undone.');">
+                                <input type="hidden" name="userId" th:value="${u.id}">
+                                <button type="submit" class="btn btn-ghost btn-remove">Remove</button>
+                            </form>
+                            <span th:if="${!canRemove}" class="panel-hint account-line">—</span>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="panel">
+            <h2>All books</h2>
+            <div class="table-wrap">
+                <table class="data">
+                    <thead>
+                    <tr>
+                        <th>Book ID</th>
+                        <th>Title</th>
+                        <th>Author</th>
+                        <th>ISBN</th>
+                        <th>Available</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="book : ${books}">
+                        <td class="mono" th:text="${book.id}"></td>
+                        <td th:text="${book.title}"></td>
+                        <td th:text="${book.author}"></td>
+                        <td th:text="${book.isbn}"></td>
+                        <td th:text="${book.availableQuantity + ' / ' + book.quantity}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

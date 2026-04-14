@@ -1,0 +1,15 @@
+# Blueprint for https://render.com — New → Blueprint → connect this repo
+# Add a persistent disk (Dashboard → your service → Disks) mounted at /data to keep library data across deploys.
+services:
+  - type: web
+    name: library-management-web
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: LIBRARY_DATA_DIR
+        value: /data
+      - key: SERVER_PORT
+        value: "8080"

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Register — Library</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/library.css}">
+</head>
+<body class="auth-page">
+    <div class="orb orb--1" aria-hidden="true"></div>
+    <div class="orb orb--2" aria-hidden="true"></div>
+    <div class="orb orb--3" aria-hidden="true"></div>
+
+    <div class="auth-shell">
+        <div class="auth-card">
+            <div class="auth-badge"><span class="icon" aria-hidden="true">✨</span> Join the library</div>
+            <h1>Create account</h1>
+            <p class="auth-sub">Pick <strong>Student</strong> or <strong>Admin</strong> — <strong>Employee</strong> is assigned only by an admin after you have an account.</p>
+
+            <div th:if="${message}"
+                 role="status"
+                 th:class="${#strings.contains(message, 'successfully')} ? 'alert alert--ok' : 'alert alert--error'"
+                 th:text="${message}"></div>
+
+            <form method="post" action="/register">
+                <div class="form-group">
+                    <label for="name">Full name</label>
+                    <input id="name" type="text" name="name" placeholder="Alex Reader" required autocomplete="name">
+                </div>
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input id="username" type="text" name="username" placeholder="alex.r" required autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input id="email" type="email" name="email" placeholder="you@example.com" required autocomplete="email">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input id="password" type="password" name="password" placeholder="Choose a strong password" required autocomplete="new-password">
+                </div>
+                <div class="form-group">
+                    <label for="role">Role</label>
+                    <select id="role" name="role">
+                        <option value="STUDENT">Student — borrow &amp; return</option>
+                        <option value="ADMIN">Admin — manage catalog</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Create account</button>
+            </form>
+
+            <p class="auth-footer"><a href="/">← Back to sign in</a></p>
+        </div>
+    </div>
+</body>
+</html>

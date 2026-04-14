@@ -1,0 +1,10 @@
+target/
+application-local.properties
+src/main/resources/application-local.properties
+.git
+.gitignore
+.idea
+*.iml
+.mvn/wrapper/maven-wrapper.jar
+**/.DS_Store
+**/*.md

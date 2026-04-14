@@ -1,0 +1,9 @@
+# Option A — same folder as pom.xml:
+#   Copy to application-local.properties (gitignored).
+# Option B — works from any IDE working directory:
+#   Copy to src/main/resources/application-local.properties (gitignored).
+#
+# One line, no leading spaces, no quotes:
+# library.ai.openai.api-key=sk-proj-...
+
+library.ai.openai.api-key=

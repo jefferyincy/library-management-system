@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Employee — Library</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/library.css}">
+</head>
+<body class="app-page">
+    <header class="app-header">
+        <div class="app-brand">
+            <span class="logo" aria-hidden="true">🧑‍💼</span>
+            <div>
+                <h1>Employee desk</h1>
+                <span>View catalog, patrons &amp; loans (read-only)</span>
+            </div>
+        </div>
+        <form method="post" action="/logout">
+            <button type="submit" class="btn btn-ghost">Log out</button>
+        </form>
+    </header>
+
+    <main class="app-main">
+        <div th:if="${staffMessage}"
+             class="alert"
+             th:classappend="${#strings.contains(staffMessage, 'suspended.') or #strings.contains(staffMessage, 'reinstated.')} ? ' alert--ok' : ' alert--error'"
+             role="status"
+             th:text="${staffMessage}"></div>
+
+        <p class="panel-hint panel-hint--tight">
+            You can look up books and active loans. Adding books and changing roles are limited to administrators.
+        </p>
+
+        <section class="panel">
+            <h2>Catalog</h2>
+            <div class="table-wrap">
+                <table class="data">
+                    <thead>
+                    <tr>
+                        <th>Book ID</th>
+                        <th>Title</th>
+                        <th>Author</th>
+                        <th>ISBN</th>
+                        <th>Available</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="book : ${books}">
+                        <td class="mono" th:text="${book.id}"></td>
+                        <td th:text="${book.title}"></td>
+                        <td th:text="${book.author}"></td>
+                        <td th:text="${book.isbn}"></td>
+                        <td th:text="${book.availableQuantity + ' / ' + book.quantity}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="panel">
+            <h2>Registered users</h2>
+            <p class="panel-hint">Patron directory (read-only).</p>
+            <div class="table-wrap">
+                <table class="data">
+                    <thead>
+                    <tr>
+                        <th>User ID</th>
+                        <th>Full name</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Account</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="u : ${users}"
+                        th:with="canToggle=${u.id != actorId and ((actorRole == 'ADMIN' and (u.role == 'STUDENT' or u.role == 'EMPLOYEE')) or (actorRole == 'EMPLOYEE' and u.role == 'STUDENT'))}">
+                        <td class="mono" th:text="${u.id}"></td>
+                        <td th:text="${u.name}"></td>
+                        <td th:text="${u.username}"></td>
+                        <td th:text="${u.email != null and !#strings.isEmpty(u.email) ? u.email : '—'}"></td>
+                        <td>
+                            <span th:if="${u.role == 'ADMIN'}" class="badge badge--admin-role" th:text="${u.role}"></span>
+                            <span th:if="${u.role == 'STUDENT'}" class="badge badge--student-role" th:text="${u.role}"></span>
+                            <span th:if="${u.role == 'EMPLOYEE'}" class="badge badge--employee-role" th:text="${u.role}"></span>
+                            <span th:if="${u.role != 'ADMIN' and u.role != 'STUDENT' and u.role != 'EMPLOYEE'}" class="badge" th:text="${u.role}"></span>
+                        </td>
+                        <td>
+                            <span th:if="${u.banned}" class="badge badge--banned">Suspended</span>
+                            <span th:if="${!u.banned and canToggle}" class="panel-hint account-line">Active</span>
+                            <form th:if="${canToggle and !u.banned}" method="post" action="/staff/set-ban" class="form-inline ban-actions">
+                                <input type="hidden" name="userId" th:value="${u.id}">
+                                <input type="hidden" name="blocked" value="true">
+                                <button type="submit" class="btn btn-ghost">Suspend</button>
+                            </form>
+                            <form th:if="${canToggle and u.banned}" method="post" action="/staff/set-ban" class="form-inline ban-actions">
+                                <input type="hidden" name="userId" th:value="${u.id}">
+                                <input type="hidden" name="blocked" value="false">
+                                <button type="submit" class="btn btn-ghost">Reinstate</button>
+                            </form>
+                            <span th:if="${!canToggle and !u.banned}" class="panel-hint account-line">—</span>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="panel">
+            <h2>All loans</h2>
+            <p class="panel-hint">Every issue in the system (desk reference).</p>
+            <div class="table-wrap">
+                <table class="data">
+                    <thead>
+                    <tr>
+                        <th>Issue ID</th>
+                        <th>Book ID</th>
+                        <th>Borrower</th>
+                        <th>Username</th>
+                        <th>Status</th>
+                        <th>Issued</th>
+                        <th>Due</th>
+                        <th>Returned</th>
+                        <th>Fine</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="issue : ${issues}" th:with="borrower=${userMap.get(issue.userId)}">
+                        <td class="mono" th:text="${issue.id}"></td>
+                        <td class="mono" th:text="${issue.bookId}"></td>
+                        <td th:text="${borrower != null ? borrower.name : '—'}"></td>
+                        <td th:text="${borrower != null ? borrower.username : '—'}"></td>
+                        <td>
+                            <span th:if="${issue.status == 'ISSUED'}" class="badge badge--issued" th:text="${issue.status}"></span>
+                            <span th:if="${issue.status == 'RETURNED'}" class="badge badge--returned" th:text="${issue.status}"></span>
+                        </td>
+                        <td th:text="${issue.issueDate}"></td>
+                        <td th:text="${issue.dueDate}"></td>
+                        <td th:text="${issue.returnDate}"></td>
+                        <td th:text="${issue.fineAmount}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

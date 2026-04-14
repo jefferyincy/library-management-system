@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:fragment="chat">
+    <div id="library-chat-backdrop" class="library-chat__backdrop" aria-hidden="true"></div>
+
+    <button type="button"
+            id="library-chat-toggle"
+            class="library-chat__toggle"
+            aria-expanded="false"
+            aria-controls="library-chat-panel">
+        <span aria-hidden="true">💬</span>
+        Help
+        <span id="library-chat-badge" class="library-chat__badge" aria-hidden="true"></span>
+    </button>
+
+    <aside id="library-chat-panel"
+           class="library-chat__panel"
+           role="dialog"
+           aria-modal="true"
+           aria-labelledby="library-chat-title"
+           aria-hidden="true">
+        <div class="library-chat__head">
+            <div>
+                <h2 id="library-chat-title">Library assistant</h2>
+                <p>Ask about borrowing, returns &amp; fines</p>
+            </div>
+            <button type="button" id="library-chat-close" class="library-chat__close" aria-label="Close help chat">×</button>
+        </div>
+        <div id="library-chat-messages" class="library-chat__messages" role="log" aria-live="polite" aria-relevant="additions"></div>
+        <div class="library-chat__foot">
+            <form id="library-chat-form" class="library-chat__form">
+                <label for="library-chat-input" class="visually-hidden">Your question</label>
+                <input id="library-chat-input" type="text" autocomplete="off" placeholder="Type your question…" maxlength="2000">
+                <button type="submit">Send</button>
+            </form>
+        </div>
+    </aside>
+
+    <script th:src="@{/js/chat-widget.js}"></script>
+</th:block>
+</body>
+</html>
