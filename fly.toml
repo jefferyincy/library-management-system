@@ -1,22 +1,22 @@
-app = "library-management-web"
-primary_region = "ord"
+app = "library-management-app"
+primary_region = "iad"
 
 [build]
   dockerfile = "Dockerfile"
 
 [env]
-  LIBRARY_DATA_DIR = "/data"
   SPRING_PROFILES_ACTIVE = "prod"
+  LIBRARY_DATA_DIR = "/data"
   SERVER_PORT = "8080"
 
-[http_service]
+[[services]]
+  protocol = "tcp"
   internal_port = 8080
-  force_https = true
-  auto_stop_machines = "stop"
-  auto_start_machines = true
-  min_machines_running = 0
   processes = ["app"]
 
-[[mounts]]
-  source = "library_data"
-  destination = "/data"
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
